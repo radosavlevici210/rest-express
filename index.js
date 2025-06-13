@@ -6,8 +6,27 @@ const compression = require('compression');
 const app = express();
 const PORT = process.env.PORT || 5000;
 
-// Security middleware
-app.use(helmet());
+// Security middleware with production policies
+app.use(helmet({
+  contentSecurityPolicy: {
+    directives: {
+      defaultSrc: ["'self'"],
+      styleSrc: ["'self'", "'unsafe-inline'"],
+      scriptSrc: ["'self'"],
+      imgSrc: ["'self'", "data:", "https:"],
+      connectSrc: ["'self'"],
+      fontSrc: ["'self'"],
+      objectSrc: ["'none'"],
+      mediaSrc: ["'self'"],
+      frameSrc: ["'none'"],
+    },
+  },
+  hsts: {
+    maxAge: 31536000,
+    includeSubDomains: true,
+    preload: true
+  }
+}));
 app.use(compression());
 
 // Rate limiting
@@ -33,10 +52,33 @@ app.use(express.static('public'));
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 
-// Request logging middleware
+// Production logging and monitoring middleware
 app.use((req, res, next) => {
+  const startTime = Date.now();
   const timestamp = new Date().toISOString();
-  console.log(`[${timestamp}] ${req.method} ${req.path} - ${req.ip}`);
+  
+  // Enhanced logging with user agent and referer
+  console.log(`[${timestamp}] ${req.method} ${req.path} - IP: ${req.ip} - UA: ${req.get('User-Agent')?.substring(0, 50) || 'Unknown'}`);
+  
+  // Response time tracking
+  res.on('finish', () => {
+    const duration = Date.now() - startTime;
+    console.log(`[${timestamp}] ${req.method} ${req.path} - ${res.statusCode} - ${duration}ms`);
+  });
+  
+  next();
+});
+
+// Production health and monitoring
+let serverStats = {
+  startTime: new Date().toISOString(),
+  requests: 0,
+  errors: 0,
+  lastError: null
+};
+
+app.use((req, res, next) => {
+  serverStats.requests++;
   next();
 });
 
@@ -99,13 +141,31 @@ app.get('/api/docs', (req, res) => {
   }
 });
 
-// Health check endpoint
+// Production health check endpoint
 app.get('/health', (req, res) => {
+  const memUsage = process.memoryUsage();
   res.json({
     status: 'healthy',
     timestamp: new Date().toISOString(),
     uptime: process.uptime(),
-    environment: process.env.NODE_ENV || 'development'
+    environment: process.env.NODE_ENV || 'development',
+    version: '2.0.0',
+    memory: {
+      rss: Math.round(memUsage.rss / 1024 / 1024) + 'MB',
+      heapUsed: Math.round(memUsage.heapUsed / 1024 / 1024) + 'MB',
+      heapTotal: Math.round(memUsage.heapTotal / 1024 / 1024) + 'MB'
+    },
+    stats: {
+      totalRequests: serverStats.requests,
+      totalErrors: serverStats.errors,
+      startTime: serverStats.startTime,
+      lastError: serverStats.lastError
+    },
+    system: {
+      nodeVersion: process.version,
+      platform: process.platform,
+      pid: process.pid
+    }
   });
 });
 
@@ -118,7 +178,7 @@ app.get('/api/categories', (req, res) => {
   });
 });
 
-// Get API statistics
+// Get API statistics with production metrics
 app.get('/api/stats', (req, res) => {
   const stats = {
     totalItems: items.length,
@@ -126,11 +186,45 @@ app.get('/api/stats', (req, res) => {
       acc[cat] = items.filter(item => item.category === cat).length;
       return acc;
     }, {}),
-    lastUpdated: items.length > 0 ? Math.max(...items.map(item => new Date(item.updatedAt).getTime())) : null
+    lastUpdated: items.length > 0 ? Math.max(...items.map(item => new Date(item.updatedAt).getTime())) : null,
+    server: {
+      uptime: process.uptime(),
+      requests: serverStats.requests,
+      errors: serverStats.errors,
+      version: '2.0.0'
+    }
   };
   res.json({
     success: true,
     data: stats
+  });
+});
+
+// Production monitoring endpoint
+app.get('/api/monitor', (req, res) => {
+  const memUsage = process.memoryUsage();
+  res.json({
+    success: true,
+    data: {
+      server: {
+        status: 'operational',
+        uptime: process.uptime(),
+        memory: {
+          used: Math.round(memUsage.heapUsed / 1024 / 1024),
+          total: Math.round(memUsage.heapTotal / 1024 / 1024),
+          rss: Math.round(memUsage.rss / 1024 / 1024)
+        },
+        cpu: process.cpuUsage(),
+        version: process.version,
+        environment: process.env.NODE_ENV || 'development'
+      },
+      api: {
+        totalRequests: serverStats.requests,
+        totalErrors: serverStats.errors,
+        totalItems: items.length,
+        lastError: serverStats.lastError
+      }
+    }
   });
 });
 
@@ -364,13 +458,29 @@ app.delete('/api/items', (req, res) => {
   }
 });
 
-// Error handling middleware
+// Production error handling middleware
 app.use((err, req, res, next) => {
-  console.error('Error:', err);
+  serverStats.errors++;
+  serverStats.lastError = {
+    message: err.message,
+    timestamp: new Date().toISOString(),
+    path: req.path,
+    method: req.method
+  };
+  
+  console.error(`[ERROR] ${new Date().toISOString()} - ${req.method} ${req.path}:`, err.message);
+  
+  // Log stack trace only in development
+  if (process.env.NODE_ENV === 'development') {
+    console.error(err.stack);
+  }
+  
   res.status(err.status || 500).json({
     success: false,
     error: 'Internal server error',
-    message: process.env.NODE_ENV === 'development' ? err.message : 'Something went wrong'
+    message: process.env.NODE_ENV === 'development' ? err.message : 'Something went wrong',
+    timestamp: new Date().toISOString(),
+    requestId: req.headers['x-request-id'] || 'unknown'
   });
 });
 
