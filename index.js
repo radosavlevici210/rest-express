@@ -6,21 +6,25 @@ const compression = require('compression');
 const app = express();
 const PORT = process.env.PORT || 5000;
 
-// Security middleware with production policies
+// Trust proxy for rate limiting in production
+app.set('trust proxy', 1);
+
+// Security middleware with production policies - Relaxed for global access
 app.use(helmet({
   contentSecurityPolicy: {
     directives: {
-      defaultSrc: ["'self'"],
-      styleSrc: ["'self'", "'unsafe-inline'"],
-      scriptSrc: ["'self'"],
-      imgSrc: ["'self'", "data:", "https:"],
-      connectSrc: ["'self'"],
-      fontSrc: ["'self'"],
+      defaultSrc: ["'self'", "*"],
+      styleSrc: ["'self'", "'unsafe-inline'", "*"],
+      scriptSrc: ["'self'", "'unsafe-inline'", "*"],
+      imgSrc: ["'self'", "data:", "https:", "*"],
+      connectSrc: ["'self'", "*"],
+      fontSrc: ["'self'", "*"],
       objectSrc: ["'none'"],
-      mediaSrc: ["'self'"],
-      frameSrc: ["'none'"],
+      mediaSrc: ["'self'", "*"],
+      frameSrc: ["'self'", "*"],
     },
   },
+  crossOriginEmbedderPolicy: false, // Allow embedding
   hsts: {
     maxAge: 31536000,
     includeSubDomains: true,
@@ -29,20 +33,22 @@ app.use(helmet({
 }));
 app.use(compression());
 
-// Rate limiting
+// Rate limiting - More generous limits for production
 const limiter = rateLimit({
   windowMs: 15 * 60 * 1000, // 15 minutes
-  max: 100, // limit each IP to 100 requests per windowMs
-  message: { error: 'Too many requests from this IP, please try again later.' }
+  max: 1000, // Increased limit for production use
+  message: { error: 'Too many requests from this IP, please try again later.' },
+  standardHeaders: true, // Return rate limit info in the `RateLimit-*` headers
+  legacyHeaders: false, // Disable the `X-RateLimit-*` headers
 });
 app.use('/api/', limiter);
 
-// CORS configuration
+// CORS configuration - Allow all origins for production API
 app.use(cors({
-  origin: process.env.NODE_ENV === 'production' 
-    ? ['https://*.replit.app', 'https://*.replit.dev'] 
-    : ['http://localhost:3000', 'http://localhost:5000'],
-  credentials: true
+  origin: true, // Allow all origins
+  credentials: true,
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization', 'X-User-ID', 'X-Requested-With']
 }));
 
 // Serve static files
@@ -602,18 +608,15 @@ app.use((err, req, res, next) => {
   };
   
   console.error(`[ERROR] ${new Date().toISOString()} - ${req.method} ${req.path}:`, err.message);
-  
-  // Log stack trace only in development
-  if (process.env.NODE_ENV === 'development') {
-    console.error(err.stack);
-  }
+  console.error(err.stack); // Always log stack trace for debugging
   
   res.status(err.status || 500).json({
     success: false,
     error: 'Internal server error',
-    message: process.env.NODE_ENV === 'development' ? err.message : 'Something went wrong',
+    message: err.message, // Always show error message
     timestamp: new Date().toISOString(),
-    requestId: req.headers['x-request-id'] || 'unknown'
+    requestId: req.headers['x-request-id'] || 'unknown',
+    stack: err.stack // Include stack trace for debugging
   });
 });
 
@@ -639,6 +642,9 @@ process.on('SIGINT', () => {
 
 app.listen(PORT, '0.0.0.0', () => {
   console.log(`🚀 Server running at http://0.0.0.0:${PORT}`);
-  console.log(`📊 Environment: ${process.env.NODE_ENV || 'development'}`);
+  console.log(`📊 Environment: ${process.env.NODE_ENV || 'production'}`);
   console.log(`📡 Health check: http://0.0.0.0:${PORT}/health`);
+  console.log(`🌍 API ready for global access`);
+  console.log(`📋 Documentation: http://0.0.0.0:${PORT}/`);
+  console.log(`🔧 Monitoring: http://0.0.0.0:${PORT}/api/monitor`);
 });
