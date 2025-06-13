@@ -1,4 +1,3 @@
-
 # 🚀 REST Express API - Production Ready
 
 A enterprise-grade REST API built with Express.js featuring comprehensive CRUD operations, advanced security, monitoring, and production-optimized performance.
@@ -268,6 +267,26 @@ Access your deployed API:
 - **Main Interface**: `https://your-repl.replit.app/`
 - **Health Check**: `https://your-repl.replit.app/health`
 - **API Stats**: `https://your-repl.replit.app/api/stats`
+
+## 🚀 Quick Start
+
+1. **Clone or Fork this repository**
+2. **Install dependencies** (automatically handled by Replit):
+   ```bash
+   npm install
+   ```
+3. **Start the server**:
+   ```bash
+   npm start
+   ```
+4. **Visit**: `http://0.0.0.0:5000` or your Replit deployment URL
+
+### Production Deployment Status ✅
+- **Environment**: Production Ready
+- **Server**: Running on port 5000
+- **Health Check**: Available at `/health`
+- **API Documentation**: Available at root `/`
+- **Monitoring**: Real-time metrics at `/api/monitor`
 
 ---
 
