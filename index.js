@@ -26,6 +26,9 @@ app.use(cors({
   credentials: true
 }));
 
+// Serve static files
+app.use(express.static('public'));
+
 // Body parsing middleware
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true, limit: '10mb' }));
@@ -73,11 +76,27 @@ app.get('/', (req, res) => {
       'PUT /api/items/:id': 'Update item by ID',
       'DELETE /api/items/:id': 'Delete item by ID',
       'GET /api/categories': 'Get all categories',
-      'GET /api/stats': 'Get API statistics'
+      'GET /api/stats': 'Get API statistics',
+      'GET /api/docs': 'OpenAPI documentation'
     },
-    documentation: 'Send requests to /api/* endpoints'
+    documentation: 'Send requests to /api/* endpoints or visit the web interface'
   };
   res.json(apiDocs);
+});
+
+// OpenAPI documentation endpoint
+app.get('/api/docs', (req, res) => {
+  try {
+    const fs = require('fs');
+    const docs = JSON.parse(fs.readFileSync('api-docs.json', 'utf8'));
+    res.json(docs);
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      error: 'Documentation not available',
+      message: error.message
+    });
+  }
 });
 
 // Health check endpoint
