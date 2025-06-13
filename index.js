@@ -68,16 +68,16 @@ app.use((req, res, next) => {
   res.setHeader('X-Copyright', 'Copyright © 2025 Ervin Remus Radosavlevici. All Rights Reserved.');
   res.setHeader('X-License', 'Proprietary Software - Unauthorized use prohibited');
   res.setHeader('X-Owner', 'radosavlevici210');
-  
+
   // Check for protected endpoint access
   const isProtectedEndpoint = PROTECTED_ENDPOINTS.some(endpoint => 
     req.path.startsWith(endpoint)
   );
-  
+
   if (isProtectedEndpoint) {
     const userHeader = req.get('X-User-ID') || req.get('Authorization');
     const isRootUser = ROOT_USERS.includes(userHeader);
-    
+
     if (!isRootUser) {
       return res.status(403).json({
         success: false,
@@ -87,7 +87,7 @@ app.use((req, res, next) => {
       });
     }
   }
-  
+
   next();
 });
 
@@ -97,16 +97,16 @@ app.use((req, res, next) => {
   const timestamp = new Date().toISOString();
   const userAgent = req.get('User-Agent')?.substring(0, 50) || 'Unknown';
   const userID = req.get('X-User-ID') || 'Anonymous';
-  
+
   // Enhanced logging with user identification
   console.log(`[${timestamp}] ${req.method} ${req.path} - IP: ${req.ip} - User: ${userID} - UA: ${userAgent}`);
-  
+
   // Response time tracking
   res.on('finish', () => {
     const duration = Date.now() - startTime;
     console.log(`[${timestamp}] ${req.method} ${req.path} - ${res.statusCode} - ${duration}ms - User: ${userID}`);
   });
-  
+
   next();
 });
 
@@ -195,7 +195,7 @@ app.get('/health', (req, res) => {
     status: 'healthy',
     timestamp: new Date().toISOString(),
     uptime: process.uptime(),
-    environment: process.env.NODE_ENV || 'development',
+    environment: process.env.NODE_ENV || 'production',
     version: '2.0.0',
     memory: {
       rss: Math.round(memUsage.rss / 1024 / 1024) + 'MB',
@@ -254,7 +254,7 @@ app.get('/api/copyright', (req, res) => {
 // User management endpoint (Root access only)
 app.get('/api/users', (req, res) => {
   const userID = req.get('X-User-ID') || req.get('Authorization');
-  
+
   if (!ROOT_USERS.includes(userID)) {
     return res.status(403).json({
       success: false,
@@ -262,7 +262,7 @@ app.get('/api/users', (req, res) => {
       message: 'This endpoint requires root user privileges'
     });
   }
-  
+
   res.json({
     success: true,
     data: {
@@ -289,21 +289,21 @@ app.get('/api/users', (req, res) => {
 // System admin endpoint (Root access only)
 app.get('/api/admin/system', (req, res) => {
   const userID = req.get('X-User-ID') || req.get('Authorization');
-  
+
   if (!ROOT_USERS.includes(userID)) {
     return res.status(403).json({
       success: false,
       error: 'Administrator access required'
     });
   }
-  
+
   res.json({
     success: true,
     data: {
       system: {
         owner: 'Ervin Remus Radosavlevici',
         repository: 'radosavlevici210/rest-express-api-production',
-        environment: process.env.NODE_ENV || 'development',
+        environment: process.env.NODE_ENV || 'production',
         uptime: process.uptime(),
         copyright: 'Protected by international copyright law'
       },
@@ -355,7 +355,7 @@ app.get('/api/monitor', (req, res) => {
         },
         cpu: process.cpuUsage(),
         version: process.version,
-        environment: process.env.NODE_ENV || 'development'
+        environment: process.env.NODE_ENV || 'production'
       },
       api: {
         totalRequests: serverStats.requests,
@@ -371,14 +371,14 @@ app.get('/api/monitor', (req, res) => {
 app.get('/api/items', (req, res) => {
   try {
     let filteredItems = [...items];
-    
+
     // Category filtering
     if (req.query.category) {
       filteredItems = filteredItems.filter(item => 
         item.category === req.query.category
       );
     }
-    
+
     // Search functionality
     if (req.query.search) {
       const searchTerm = req.query.search.toLowerCase();
@@ -387,15 +387,15 @@ app.get('/api/items', (req, res) => {
         (item.description && item.description.toLowerCase().includes(searchTerm))
       );
     }
-    
+
     // Pagination
     const page = Math.max(1, parseInt(req.query.page) || 1);
     const limit = Math.min(100, Math.max(1, parseInt(req.query.limit) || 10));
     const startIndex = (page - 1) * limit;
     const endIndex = startIndex + limit;
-    
+
     const paginatedItems = filteredItems.slice(startIndex, endIndex);
-    
+
     res.json({
       success: true,
       data: paginatedItems,
@@ -440,9 +440,9 @@ app.post('/api/items', (req, res) => {
       createdAt: now,
       updatedAt: now
     };
-    
+
     items.push(item);
-    
+
     res.status(201).json({
       success: true,
       data: item,
@@ -468,7 +468,7 @@ app.get('/api/items/:id', (req, res) => {
         message: `Item with ID ${req.params.id} does not exist`
       });
     }
-    
+
     res.json({
       success: true,
       data: item
@@ -513,7 +513,7 @@ app.put('/api/items/:id', (req, res) => {
 
     // Update item
     Object.assign(item, updateData, { updatedAt: new Date().toISOString() });
-    
+
     res.json({
       success: true,
       data: item,
@@ -539,9 +539,9 @@ app.delete('/api/items/:id', (req, res) => {
         message: `Item with ID ${req.params.id} does not exist`
       });
     }
-    
+
     const deletedItem = items.splice(index, 1)[0];
-    
+
     res.json({
       success: true,
       data: deletedItem,
@@ -566,10 +566,10 @@ app.delete('/api/items', (req, res) => {
         error: 'IDs must be provided as an array'
       });
     }
-    
+
     const deletedItems = [];
     const notFoundIds = [];
-    
+
     ids.forEach(id => {
       const index = items.findIndex(item => item.id === parseInt(id));
       if (index !== -1) {
@@ -578,7 +578,7 @@ app.delete('/api/items', (req, res) => {
         notFoundIds.push(id);
       }
     });
-    
+
     res.json({
       success: true,
       data: {
@@ -606,10 +606,10 @@ app.use((err, req, res, next) => {
     path: req.path,
     method: req.method
   };
-  
+
   console.error(`[ERROR] ${new Date().toISOString()} - ${req.method} ${req.path}:`, err.message);
   console.error(err.stack); // Always log stack trace for debugging
-  
+
   res.status(err.status || 500).json({
     success: false,
     error: 'Internal server error',

@@ -6,7 +6,7 @@ A enterprise-grade REST API built with Express.js featuring comprehensive CRUD o
 
 ### 🛡️ Security & Compliance
 - **Advanced Security Headers** - Helmet.js with CSP, HSTS, and security policies
-- **Rate Limiting** - 100 requests per 15 minutes per IP with custom error responses
+- **Rate Limiting** - 1000 requests per 15 minutes per IP for production use
 - **CORS Protection** - Environment-specific origin policies
 - **Input Validation** - Comprehensive data validation and sanitization
 - **Error Handling** - Production-safe error responses with request tracking
@@ -153,7 +153,7 @@ curl -X POST "https://your-repl.replit.app/api/items" \
 - **X-Content-Type-Options** - Prevents MIME sniffing
 
 ### Rate Limiting
-- **API Protection** - 100 requests per 15 minutes per IP
+- **API Protection** - 1000 requests per 15 minutes per IP for production use
 - **Custom Error Messages** - Informative rate limit responses
 - **IP-based Tracking** - Individual IP rate limiting
 
