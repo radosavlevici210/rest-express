@@ -1,18 +1,48 @@
 const express = require('express');
-const path = require('path');
+const cors = require('cors');
 const app = express();
 const PORT = process.env.PORT || 3000;
 
-// Serve the AI Music/Video Studio at /studio
-app.use('/studio', express.static(path.join(__dirname, 'AI_Movie_Studio_Pro_Production_Ready')));
+app.use(cors());
+app.use(express.json());
 
-// Home route
+let items = [];
+let nextId = 1;
+
 app.get('/', (req, res) => {
-  res.send(`
-    <h1>✅ Welcome, Ervin</h1>
-    <p>Your Express server is secure and working.</p>
-    <p>🎵 AI Music & Video Studio is available at <a href="/studio">/studio</a></p>
-  `);
+  res.send('✅ REST Express API is running');
+});
+
+app.get('/items', (req, res) => {
+  res.json(items);
+});
+
+app.post('/items', (req, res) => {
+  const { name } = req.body;
+  if (!name) return res.status(400).json({ error: 'Name is required' });
+  const item = { id: nextId++, name };
+  items.push(item);
+  res.status(201).json(item);
+});
+
+app.get('/items/:id', (req, res) => {
+  const item = items.find(i => i.id === +req.params.id);
+  if (!item) return res.status(404).json({ error: 'Item not found' });
+  res.json(item);
+});
+
+app.put('/items/:id', (req, res) => {
+  const item = items.find(i => i.id === +req.params.id);
+  if (!item) return res.status(404).json({ error: 'Item not found' });
+  item.name = req.body.name || item.name;
+  res.json(item);
+});
+
+app.delete('/items/:id', (req, res) => {
+  const index = items.findIndex(i => i.id === +req.params.id);
+  if (index === -1) return res.status(404).json({ error: 'Item not found' });
+  items.splice(index, 1);
+  res.status(204).send();
 });
 
 app.listen(PORT, () => {
