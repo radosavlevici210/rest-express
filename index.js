@@ -1,10 +1,68 @@
+// Before (assuming you have the middleware imported)
 const express = require('express');
-const cors = require('cors');
-const rateLimit = require('express-rate-limit');
 const helmet = require('helmet');
 const compression = require('compression');
+const rateLimit = require('express-rate-limit');
+
+const app = express();
+
+// Middleware configuration
+app.use(helmet()); // Security headers
+app.use(compression()); // Response compression
+app.use(rateLimit({
+  windowMs: 15 * 60 * 1000, // 15 minutes
+  max: 100 // Limit each IP to 100 requests per windowMs
+}));
+
+// Your other routes and logic...
+
+// After modification (removing middleware)
+const express = require('express');
+
+const app = express();
+
+// Your other routes and logic...git add .
+git commit -m "Your commit message describing the changes"git push origin maingit add .git commit -m "Final adjustments and ready for production"git push origin mainconst express = require('express');
+const cors = require('cors');
 const app = express();
 const PORT = process.env.PORT || 5000;
+
+app.use(cors()); // Allow cross-origin requests
+app.use(express.json()); // Body parsing middleware
+app.use(express.urlencoded({ extended: true }));
+
+// Copyright header middleware
+app.use((req, res, next) => {
+  res.setHeader('X-Copyright', 'Copyright © 2025 Ervin Remus Radosavlevici. All Rights Reserved.');
+  next();
+});
+
+// Basic route for health check
+app.get('/health', (req, res) => {
+  res.json({ status: 'healthy' });
+});
+
+// Sample route
+app.get('/api/items', (req, res) => {
+  // Fetch items logic here
+  res.json({ message: 'Fetched items successfully!' });
+});
+
+// Error handling middleware
+app.use((err, req, res, next) => {
+  console.error(err.stack);
+  res.status(500).send('Something broke!');
+});
+
+// 404 handler
+app.use('*', (req, res) => {
+  res.status(404).json({ error: 'Not found' });
+});
+
+// Start the server
+app.listen(PORT, '0.0.0.0', () => {
+  console.log(`Server is running on http://0.0.0.0:${PORT}`);
+});
 
 // Trust proxy for rate limiting in production
 app.set('trust proxy', 1);
