@@ -5,4 +5,16 @@ run = "npm run start"
 channel = "stable-24_05"
 
 [deployment]
-run = ["sh", "-c", "npm run start"]
+run = ["sh", "-c", "NODE_ENV=production npm start"]
+
+[workflows]
+runButton = "Production Server"
+
+[[workflows.workflow]]
+name = "Production Server"
+author = 43798591
+mode = "sequential"
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "NODE_ENV=production npm start"
