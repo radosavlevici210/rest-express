@@ -1,9 +1,37 @@
+
 {
-  "name": "rest-express",
-  "version": "1.0.0",
+  "name": "rest-express-api-production",
+  "version": "2.0.0",
+  "description": "Enterprise-grade REST API with Express.js - Production ready with security, monitoring, and performance optimizations",
   "main": "index.js",
   "scripts": {
-    "start": "node index.js"
+    "start": "node index.js",
+    "dev": "NODE_ENV=development node index.js",
+    "prod": "NODE_ENV=production node index.js",
+    "test": "node tests/api.test.js"
+  },
+  "keywords": [
+    "rest-api",
+    "express",
+    "production",
+    "monitoring",
+    "security",
+    "replit",
+    "node.js"
+  ],
+  "author": "radosavlevici210",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/radosavlevici210/rest-express-api-production.git"
+  },
+  "bugs": {
+    "url": "https://github.com/radosavlevici210/rest-express-api-production/issues"
+  },
+  "homepage": "https://github.com/radosavlevici210/rest-express-api-production#readme",
+  "engines": {
+    "node": ">=18.0.0",
+    "npm": ">=8.0.0"
   },
   "dependencies": {
     "compression": "^1.8.0",
