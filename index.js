@@ -52,18 +52,53 @@ app.use(express.static('public'));
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 
+// User Management and Copyright Protection
+const ROOT_USERS = ['radosavlevici210', 'admin'];
+const PROTECTED_ENDPOINTS = ['/api/admin', '/api/users', '/api/system'];
+
+// Copyright and access control middleware
+app.use((req, res, next) => {
+  // Add copyright header to all responses
+  res.setHeader('X-Copyright', 'Copyright © 2025 Ervin Remus Radosavlevici. All Rights Reserved.');
+  res.setHeader('X-License', 'Proprietary Software - Unauthorized use prohibited');
+  res.setHeader('X-Owner', 'radosavlevici210');
+  
+  // Check for protected endpoint access
+  const isProtectedEndpoint = PROTECTED_ENDPOINTS.some(endpoint => 
+    req.path.startsWith(endpoint)
+  );
+  
+  if (isProtectedEndpoint) {
+    const userHeader = req.get('X-User-ID') || req.get('Authorization');
+    const isRootUser = ROOT_USERS.includes(userHeader);
+    
+    if (!isRootUser) {
+      return res.status(403).json({
+        success: false,
+        error: 'Access Denied',
+        message: 'Root user privileges required for this endpoint',
+        copyright: 'Copyright © 2025 Ervin Remus Radosavlevici'
+      });
+    }
+  }
+  
+  next();
+});
+
 // Production logging and monitoring middleware
 app.use((req, res, next) => {
   const startTime = Date.now();
   const timestamp = new Date().toISOString();
+  const userAgent = req.get('User-Agent')?.substring(0, 50) || 'Unknown';
+  const userID = req.get('X-User-ID') || 'Anonymous';
   
-  // Enhanced logging with user agent and referer
-  console.log(`[${timestamp}] ${req.method} ${req.path} - IP: ${req.ip} - UA: ${req.get('User-Agent')?.substring(0, 50) || 'Unknown'}`);
+  // Enhanced logging with user identification
+  console.log(`[${timestamp}] ${req.method} ${req.path} - IP: ${req.ip} - User: ${userID} - UA: ${userAgent}`);
   
   // Response time tracking
   res.on('finish', () => {
     const duration = Date.now() - startTime;
-    console.log(`[${timestamp}] ${req.method} ${req.path} - ${res.statusCode} - ${duration}ms`);
+    console.log(`[${timestamp}] ${req.method} ${req.path} - ${res.statusCode} - ${duration}ms - User: ${userID}`);
   });
   
   next();
@@ -109,6 +144,9 @@ app.get('/', (req, res) => {
   const apiDocs = {
     message: '✅ REST Express API is running',
     version: '2.0.0',
+    copyright: 'Copyright © 2025 Ervin Remus Radosavlevici. All Rights Reserved.',
+    owner: 'radosavlevici210',
+    license: 'Proprietary Software',
     endpoints: {
       'GET /': 'API documentation',
       'GET /health': 'Health check',
@@ -119,9 +157,12 @@ app.get('/', (req, res) => {
       'DELETE /api/items/:id': 'Delete item by ID',
       'GET /api/categories': 'Get all categories',
       'GET /api/stats': 'Get API statistics',
-      'GET /api/docs': 'OpenAPI documentation'
+      'GET /api/docs': 'OpenAPI documentation',
+      'GET /api/users': 'User management (Root only)',
+      'GET /api/copyright': 'Copyright information'
     },
-    documentation: 'Send requests to /api/* endpoints or visit the web interface'
+    documentation: 'Send requests to /api/* endpoints or visit the web interface',
+    notice: 'Unauthorized use of this API is prohibited and may result in legal action'
   };
   res.json(apiDocs);
 });
@@ -175,6 +216,98 @@ app.get('/api/categories', (req, res) => {
     success: true,
     data: categories,
     count: categories.length
+  });
+});
+
+// Copyright information endpoint
+app.get('/api/copyright', (req, res) => {
+  res.json({
+    success: true,
+    copyright: {
+      notice: 'Copyright © 2025 Ervin Remus Radosavlevici. All Rights Reserved.',
+      owner: 'Ervin Remus Radosavlevici',
+      github: 'radosavlevici210',
+      license: 'Proprietary Software with MIT base license',
+      repository: 'rest-express-api-production',
+      created: '2025',
+      terms: {
+        personalUse: 'Permitted for non-commercial personal projects',
+        commercialUse: 'Requires written authorization from copyright holder',
+        redistribution: 'Prohibited without explicit permission',
+        reverseEngineering: 'Strictly prohibited'
+      },
+      contact: {
+        licensing: 'Contact @radosavlevici210 for licensing inquiries',
+        violations: 'Report copyright violations to repository owner',
+        support: 'Technical support available for licensed users'
+      }
+    }
+  });
+});
+
+// User management endpoint (Root access only)
+app.get('/api/users', (req, res) => {
+  const userID = req.get('X-User-ID') || req.get('Authorization');
+  
+  if (!ROOT_USERS.includes(userID)) {
+    return res.status(403).json({
+      success: false,
+      error: 'Root access required',
+      message: 'This endpoint requires root user privileges'
+    });
+  }
+  
+  res.json({
+    success: true,
+    data: {
+      rootUsers: ROOT_USERS,
+      currentUser: userID,
+      accessLevel: 'Administrator',
+      permissions: [
+        'User management',
+        'System configuration',
+        'Production deployment',
+        'Security policies',
+        'Copyright enforcement'
+      ],
+      system: {
+        totalUsers: 1,
+        activeUsers: 1,
+        lastLogin: new Date().toISOString(),
+        securityLevel: 'Maximum'
+      }
+    }
+  });
+});
+
+// System admin endpoint (Root access only)
+app.get('/api/admin/system', (req, res) => {
+  const userID = req.get('X-User-ID') || req.get('Authorization');
+  
+  if (!ROOT_USERS.includes(userID)) {
+    return res.status(403).json({
+      success: false,
+      error: 'Administrator access required'
+    });
+  }
+  
+  res.json({
+    success: true,
+    data: {
+      system: {
+        owner: 'Ervin Remus Radosavlevici',
+        repository: 'radosavlevici210/rest-express-api-production',
+        environment: process.env.NODE_ENV || 'development',
+        uptime: process.uptime(),
+        copyright: 'Protected by international copyright law'
+      },
+      security: {
+        rateLimiting: 'Active',
+        corsPolicy: 'Enforced',
+        securityHeaders: 'Enabled',
+        accessControl: 'Root user verification active'
+      }
+    }
   });
 });
 

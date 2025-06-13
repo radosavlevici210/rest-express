@@ -25,10 +25,38 @@ A enterprise-grade REST API built with Express.js featuring comprehensive CRUD o
 - **Stateless Design** - Horizontal scaling ready
 - **Resource Monitoring** - CPU and memory usage tracking
 
+## 📋 Copyright & Ownership
+
+**Copyright © 2025 Ervin Remus Radosavlevici. All Rights Reserved.**
+
+- **Owner**: Ervin Remus Radosavlevici
+- **GitHub**: @radosavlevici210
+- **License**: Proprietary Software with MIT base license
+- **Repository**: rest-express-api-production
+
+This software is protected by copyright law. See [COPYRIGHT.md](COPYRIGHT.md) for detailed terms and conditions.
+
+## 👥 User Management
+
+### Access Levels
+- **Root Users**: Full administrative access (@radosavlevici210)
+- **Contributors**: Development and testing access
+- **Users**: Standard API access with rate limiting
+- **Guests**: Public documentation access only
+
+### Root User Features
+- User management endpoints (`/api/users`, `/api/admin/*`)
+- System configuration access
+- Production deployment controls
+- Security policy management
+- Copyright enforcement tools
+
 ## 🏗️ Architecture
 
 ```
-├── Core API Endpoints     - CRUD operations with validation
+├── Copyright Protection   - Legal notices, user verification
+├── User Management       - Root access, authentication
+├── Core API Endpoints    - CRUD operations with validation
 ├── Security Layer        - Helmet, CORS, Rate limiting
 ├── Monitoring Layer      - Health checks, metrics, logging
 ├── Error Handling        - Comprehensive error management
@@ -57,6 +85,19 @@ A enterprise-grade REST API built with Express.js featuring comprehensive CRUD o
 
 ### 🏷️ Categories
 - `GET /api/categories` - Get all available categories
+
+### 👥 User Management (Root Access)
+- `GET /api/users` - User management (requires root privileges)
+- `GET /api/admin/system` - System administration (requires root privileges)
+- `GET /api/copyright` - Copyright and licensing information
+
+### 🔐 Authentication Headers
+```bash
+# For root user access
+X-User-ID: radosavlevici210
+# or
+Authorization: radosavlevici210
+```
 
 ## 🔧 Advanced Query Parameters
 

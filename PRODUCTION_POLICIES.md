@@ -1,6 +1,26 @@
 
 # Production Policies & Guidelines
 
+## 📋 Copyright & Intellectual Property
+
+### Copyright Protection
+- All source code and documentation protected under copyright law
+- Unauthorized reproduction or distribution prohibited
+- Commercial usage requires explicit written authorization
+- DMCA takedown procedures enforced for violations
+
+### User Access Control
+- Root user privileges reserved for repository owner (@radosavlevici210)
+- Administrative endpoints protected with user verification
+- Access levels enforced through middleware authentication
+- Unauthorized access attempts logged and blocked
+
+### Licensing Compliance
+- Proprietary software with MIT base license
+- Personal use permitted for non-commercial projects
+- Educational use allowed with proper attribution
+- Government use subject to special licensing terms
+
 ## 🔒 Security Policies
 
 ### Data Protection
